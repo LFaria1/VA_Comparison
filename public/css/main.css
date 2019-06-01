@@ -1,0 +1,33 @@
+.nav-adj{
+    padding-top:1.5em;
+}
+@media (max-width:768px){
+    .row-adj{
+        margin-right:5px;
+        margin-left: 0;
+
+    }
+    /* .cont-res-adj{
+        padding-right:30px;
+        padding-left:30px;
+    } */
+    .name{
+        padding-right: 0;
+        padding-left:0;
+    }
+}
+.no-mr{
+    margin-right: 0;
+}
+.minw{
+    min-width: 100%;
+}
+
+#matches{
+    text-overflow: ellipsis
+}
+.w{width:33.3%;}
+.list-group-horizontal{
+    width:100%;
+    margin-bottom:0.5em;
+}
