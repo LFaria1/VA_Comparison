@@ -1,7 +1,6 @@
 class Controller {
     
     constructor() {
-        //this.searchBtn = document.querySelector(".btn, .btn-outline-success");
         this.form = document.querySelector(".form-row");
         this.nameOne = document.querySelector("#name-one");
         this.nameTwo = document.querySelector("#name-two");
@@ -18,10 +17,8 @@ class Controller {
         this.VAOneID = "";
         this.VATwoID = "";
         this.spinner=document.querySelector(".spinner-border");
-        //
         this.VARolesOne=[];
         this.VARolesTwo=[];
-        //when response has more than 2 pages, it will be used again
         this.tempName="";
         this.overlappingRoles=[];
         this.searchVAResult = [];
@@ -37,7 +34,7 @@ class Controller {
     addEvents() {
         //Evento do botão submit
         this.form.addEventListener("submit", (e) => {
-            //Remover erro quando botão clicado
+            //Esconder elementos quando Search for clicado
             this.errorEl.classList.add("d-none");
             //
             this.searchResultEl.classList.add("d-none");
@@ -73,7 +70,8 @@ class Controller {
     handleData(data) {
         this.getVAList(data);
     }
-
+    
+    //Erro de input do usuário/retorno vazio
     showError(error){
         this.errorEl.classList.remove("d-none");
         this.errorEl.innerHTML=error;
@@ -83,13 +81,13 @@ class Controller {
         console.log(data);
         if (data.data.Page.pageInfo.total == 0) {
             //Se não encontrar nenhum resultado
-            console.log("none found");
             this.showError("None found, please try again");
-        } else {            
+        } else {
+            //Se encontrar verificar se possui algum trabalho            
             let len = data.data.Page.staff.length;
             for (let i = 0; i < len - 1; i++) {                
                 if (data.data.Page.staff[i].characters.edges.length > 0) {                   
-                    console.log(data.data.Page.staff[i].characters.edges);
+                    //Inserir na lista de resultados
                     let va = data.data.Page.staff[i]
                     let obj = {
                         id: va.id,
@@ -98,7 +96,8 @@ class Controller {
                     this.searchVAResult.push(obj);              
                 }
             }
-
+            //A API retorna no max 25 resultados por página, 
+            //verificando se é necessário mais uma busca (possui mais páginas)
             if (data.data.Page.pageInfo.hasNextPage == true) {
                 let page = data.data.Page.pageInfo.currentPage + 1;
                 let params={
@@ -107,7 +106,7 @@ class Controller {
                 }
                 this.search(true,params);
             } else {
-                //this.VASearchPagination();
+                //Se não possuir
                 let totalItems = this.searchVAResult.length;
                 this.showStuffs(this.searchResultEl,this.callbackVASearch,totalItems);
             }
@@ -164,16 +163,16 @@ class Controller {
     }
 
     handleDataFromBoth(data){
-        //console.log(data);
+
         let dataA;
         let dataB;
         let params={}
         let sendagain=false;
-
+        
         if(data.data.a){
             dataA=data.data.a;
             this.VARolesOne.push(...dataA.characters.edges);
-
+            //Se há mais paginas, settar params para a proxima query
             if(dataA.characters.pageInfo.hasNextPage){
                 params.id1=this.VAOneID;
                 params.page1=dataA.characters.pageInfo.currentPage+1;
@@ -183,6 +182,7 @@ class Controller {
         if(data.data.b){
             dataB=data.data.b;
             this.VARolesTwo.push(...dataB.characters.edges);
+            //Se há mais paginas, settar params para a proxima query
             if(dataB.characters.pageInfo.hasNextPage){
                 params.id2=this.VATwoID;
                 params.page2=dataB.characters.pageInfo.currentPage+1;
@@ -190,9 +190,7 @@ class Controller {
             }
         }        
         //arr=array.map(a => ({...a}));      
-        sendagain?
-        this.search(false,params,this.handleDataFromBoth):
-        this.compareWorks();    
+        sendagain?this.search(false,params,this.handleDataFromBoth):this.compareWorks();    
 
     }
 
@@ -202,7 +200,7 @@ class Controller {
         this.VARolesOne.forEach(role1=>{
             this.VARolesTwo.forEach(role2=>{
                 if(role1.media[0].title.native==role2.media[0].title.native){
-                    
+                    //criando novo obj com as informações que serão mostradas na tela e inserindo em um array                    
                     let obj={
                         workname:role1.media[0],
                         name1:role1.node.name,
@@ -214,16 +212,19 @@ class Controller {
 
             });
         });
+
         if(this.overlappingRoles.length<1){
         //Se nenhum match for encontrado
             this.showError("No matches found");
         }
         this.actualPage=1;
-        //this.showWorks();
         let totalItems=this.overlappingRoles.length;
+        //mostrar na tela
         this.showStuffs(this.matchesEl,this.callbackWorks,totalItems);
 
     }
+
+    //mostrar na tela o resultado das pesquisas e o resultado da comparação
     showStuffs(element,callback,totalItems){
         console.log();    
         element.classList.remove("d-none");
@@ -240,7 +241,8 @@ class Controller {
         this.spinner.classList.add("d-none");       
         
     }
-     
+    
+    //Usada como callback quando chamar a showStuffs()
     callbackWorks(totalItens,start,end){
         this.vaNamesEl.innerHTML="";
         this.vaNamesEl.innerHTML+=`
@@ -251,13 +253,6 @@ class Controller {
                 <b>${this.nameTwo.innerHTML}</b>
             </p>
         `;
-       /* let strong1=document.createElement("b");
-        let strong2=document.createElement("b");
-        strong1.innerHTML=;
-        strong2.innerHTML=this.nameTwo;
-        this.vaNamesEl.appendChild(strong1);
-        this.vaNamesEl.appendChild(strong2);*/
-        
         
         for(let i =start;i<end;i++){
             if(totalItens>i){
@@ -282,6 +277,7 @@ class Controller {
         } 
     }
 
+    //Usada como callback quando chamar a showStuffs()
     callbackVASearch(totalItens,start,end){
         this.searchResultEl.innerHTML="";
 
@@ -296,6 +292,8 @@ class Controller {
             }
         }
     }
+
+    //retorna as strings para mostrar na tela
     getWorkname(worknameObj){
         let title=`${worknameObj.title.romaji!==null?worknameObj.title.romaji:""} 
                       ${worknameObj.title.native!==null?`(`+worknameObj.title.native+`)`:""} 
@@ -321,8 +319,8 @@ class Controller {
         ${nameObj.native !== null ? `(` + nameObj.native + `)` : ""}`
     }
 
+    //Adiciona LI ao UL da paginação
     addLiToNav(i) {
-
         let li = document.createElement("li");
         let a = document.createElement("a");
         let span;
@@ -350,9 +348,8 @@ class Controller {
         }        
     }
     
-
+    //adicionando eventos dos elementos de paginação
     addEventLiNav() {
-
         this.navUl.addEventListener("click", (e) => {
             e.preventDefault();
             if (e.target && (e.target.nodeName == "LI" || e.target.nodeName == "A")) {
@@ -362,9 +359,7 @@ class Controller {
                             this.actualPage++;
                         }else{
                             this.actualPage=parseInt(e.target.innerHTML);   
-                        }
-                        console.log(this.actualPage);
-                
+                        }                
                 if(this.searchVAResult.length<1){                
                 let totalItems=this.overlappingRoles.length;            
                 this.showStuffs(this.matchesEl,this.callbackWorks,totalItems);
@@ -376,8 +371,9 @@ class Controller {
         });
     }
 
+
+    //Cria o menu de navegação de páginas
     showPages(totalItens, perPage=10) {
-        console.log("showPages");
         this.navUl.innerHTML = "";
         this.navEl.classList.remove("d-none");
         let totalPages = Math.ceil(totalItens / perPage);
@@ -406,9 +402,9 @@ class Controller {
         }
         
     }
-
+    //Setando opções para a query
     setOptions(selecting,params={}) {
-        //let pag = page;
+
         if (!params.page) {
             params.page = 1;
         }
@@ -428,6 +424,7 @@ class Controller {
 
 
     }
+
     setQuery(selecting=true,params) {
         return Query.getQuery(selecting,params);
     }
@@ -438,7 +435,7 @@ class Controller {
             return response.ok ? json : Promise.reject(json);
         });
     }
-
+    //Erro de resposta do servidor
     handleError(error) {
         alert('Error, check console');
         console.error(error);

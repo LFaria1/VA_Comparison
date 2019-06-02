@@ -1,7 +1,7 @@
 class Query{
     static getQuery(search=false,data={}){
         let query;
-
+        //buscando por nome
         if(search){
             query=`
             query($name: String,$page:Int){
@@ -43,7 +43,7 @@ class Query{
           }
             `;
         }else{
-            
+            //buscando os trabalho das duas pessoas selecionadas
             let sendAgainA=false;
             let sendAgainB=false;
 
