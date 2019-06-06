@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Start your development with a Design System for Bootstrap 4.">
   <meta name="author" content="Creative Tim">
-  <title><%=title%></title>
+  <title>Works Comparison</title>
   <!-- Favicon -->
   <!--<link href="" rel="icon" type="image/png">-->
   <!-- Fonts -->
@@ -19,6 +19,8 @@
 
 <body>
   <div class="jumbotron">
+    <!-- INIT DIV CONTAINER-->
+    <!-- Contains the search bar, selected name one, selected name two-->
     <div class="container">
       <h1 class="display-3">VA works comparison</h1>
       <p>This project was made using <a href="https://github.com/AniList/ApiV2-GraphQL-Docs">
@@ -48,20 +50,27 @@
         </div>
       </div>
     </div>
+    <!-- END DIV CONTAINER-->
   </div>
+
   <div class="container cont-res-adj">
     <div class="alert alert-danger d-none"></div>
-    <!--  -->
+
+    <!-- When data is being processed, show loading spinner -->
     <div class="d-flex justify-content-center">
         <div class="spinner-border text-success m-5 d-none" role="status">
             <span class="sr-only">Loading...</span>
         </div>
-    </div>
-    
-    <!--  -->
+    </div>    
+    <!-- END LOADING SPINNER  -->
+
+    <!-- Show search result-->
     <div id="results" class="list-group d-none">
     </div>
+    <!-- END SEARCH RESULT -->
   </div>
+
+  <!-- Show matches and characters-->
   <div class="container">
     <div class="va-names row">
       
@@ -70,25 +79,17 @@
       
     </div>
   </div>
+  <!-- END SHOW MATCHES-->
+
+  <!-- Navigation Bar-->
   <div class="nav-bar d-none">
     <nav aria-label="Search result" class="nav-adj">
       <ul class="pagination justify-content-center">
-        <li class="page-item">
-          <a class="page-link" href="#" aria-label="Previous">
-            <span aria-hidden="true">&laquo;</span>
-          </a>
-        </li>
-        <li class="page-item"><a class="page-link" href="#">1</a></li>
-        <li class="page-item"><a class="page-link" href="#">2</a></li>
-        <li class="page-item"><a class="page-link" href="#">3</a></li>
-        <li class="page-item">
-          <a class="page-link" href="#" aria-label="Next">
-            <span aria-hidden="true">&raquo;</span>
-          </a>
-        </li>
       </ul>
     </nav>
   </div>
+   <!-- END NAVIGATION BAR-->
+
   <script src="public/js/query.js"></script>
   <script src="public/js/Controller.js"></script>
   <script src="public/js/index.js"></script>
