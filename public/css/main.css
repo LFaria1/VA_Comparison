@@ -1,16 +1,16 @@
+/*
+* Adjusting margin and paddings
+*/
 .nav-adj{
     padding-top:1.5em;
 }
+
 @media (max-width:768px){
     .row-adj{
         margin-right:5px;
         margin-left: 0;
 
     }
-    /* .cont-res-adj{
-        padding-right:30px;
-        padding-left:30px;
-    } */
     .name{
         padding-right: 0;
         padding-left:0;

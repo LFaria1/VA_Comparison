@@ -1,6 +1,9 @@
 class Controller {
     
     constructor() {
+        /**
+         * Selecting HTML Elements
+         */
         this.form = document.querySelector(".form-row");
         this.nameOne = document.querySelector("#name-one");
         this.nameTwo = document.querySelector("#name-two");
@@ -12,6 +15,10 @@ class Controller {
         this.matchLiRight=document.querySelector("#matches-right");
         this.errorEl=document.querySelector(".alert");
         this.vaNamesEl=document.querySelector(".va-names");
+
+        /**
+         * Initializing attributes
+         */
         this.VANameOne="";
         this.VANameTwo="";
         this.VAOneID = "";
@@ -23,71 +30,78 @@ class Controller {
         this.overlappingRoles=[];
         this.searchVAResult = [];
         this.conn = 'https://graphql.anilist.co';
-
         this.actualPage = 1;
         this.navUl = document.querySelector(".pagination");
-        this.addEvents();
+
+        /**
+         * Initializing events
+         */
+        this.addButtonEvent();
         this.addEventLiNav();
         this.addEventLiSearch();
     }
 
-    addEvents() {
-        //Evento do botão submit
+    addButtonEvent() {
+        //Add button submit event
         this.form.addEventListener("submit", (e) => {
-            //Esconder elementos quando Search for clicado
+            e.preventDefault();
+            //Hiding elements when button is clicked
             this.errorEl.classList.add("d-none");
-            //
             this.searchResultEl.classList.add("d-none");
             this.navEl.classList.add("d-none");
-
             if(!this.matchesEl.classList.contains("d-none")){
                 this.matchesEl.classList.add("d-none");
             }
+
             this.actualPage = 1;
             this.searchVAResult = [];
-            e.preventDefault();
+
+            //saving the form input value
             this.tempName = this.form.input.value;
             let params={
                 name:this.tempName
             }
-            
+
+            //Searching for name input and showing loading spinner 
             this.search(true,params);
             this.spinner.classList.remove("d-none");
         });
     }
 
     search(selecting,params,callback=this.handleData) {
-        //bind this pois quando chamada como callback perde o contexto
+        //To keep the context when calling as callback
         callback=callback.bind(this);
         this.handleError.bind(this);
         
+        //Sending query to database
         let options = this.setOptions(selecting,params);
         fetch(this.conn, options).then(this.handleResponse)
             .then(data => callback(data))
             .catch(this.handleError);
     }
-
-    handleData(data) {
-        this.getVAList(data);
-    }
     
-    //Erro de input do usuário/retorno vazio
+    //User input error/ no results found
     showError(error){
         this.errorEl.classList.remove("d-none");
         this.errorEl.innerHTML=error;
     }
 
+    
+    handleData(data) {
+        this.getVAList(data);
+    }
+
     getVAList(data) {
         console.log(data);
         if (data.data.Page.pageInfo.total == 0) {
-            //Se não encontrar nenhum resultado
+            //if not found, show error
             this.showError("None found, please try again");
         } else {
-            //Se encontrar verificar se possui algum trabalho            
+            //if found, verify if it has any work         
             let len = data.data.Page.staff.length;
             for (let i = 0; i < len - 1; i++) {                
                 if (data.data.Page.staff[i].characters.edges.length > 0) {                   
-                    //Inserir na lista de resultados
+                    //Push into result array as and obj
                     let va = data.data.Page.staff[i]
                     let obj = {
                         id: va.id,
@@ -96,8 +110,8 @@ class Controller {
                     this.searchVAResult.push(obj);              
                 }
             }
-            //A API retorna no max 25 resultados por página, 
-            //verificando se é necessário mais uma busca (possui mais páginas)
+            //API returns at max 25 results per page
+            //If hasNextPage = true, will send request again for next page
             if (data.data.Page.pageInfo.hasNextPage == true) {
                 let page = data.data.Page.pageInfo.currentPage + 1;
                 let params={
@@ -106,9 +120,9 @@ class Controller {
                 }
                 this.search(true,params);
             } else {
-                //Se não possuir
+                //If hasNextPage = false
                 let totalItems = this.searchVAResult.length;
-                this.showStuffs(this.searchResultEl,this.callbackVASearch,totalItems);
+                this.showContent(this.searchResultEl,this.callbackVASearch,totalItems);
             }
         }
     }
@@ -126,6 +140,9 @@ class Controller {
 
     }
 
+    /**
+     * Verifying if both are selected to start comparison
+     */
     selectVA(el){    
         if(this.nameOne.classList.contains("d-none")){
         this.nameOne.innerHTML=el.textContent;
@@ -148,7 +165,10 @@ class Controller {
         }
 
     }
-   
+
+    /**
+     * Fetching data from selected voice actors
+     */    
     getDataFromBoth(){
         this.VARolesOne=[];
         this.VARolesTwo=[];
@@ -158,12 +178,14 @@ class Controller {
             page1:1,
             page2:1
         }
-        this.search(false,params,this.handleDataFromBoth);
-             
+        this.search(false,params,this.handleDataFromBoth);             
     }
 
+    /**
+     * Recursive function that receives data from database
+     * and verify the need of getting more pages
+     */
     handleDataFromBoth(data){
-
         let dataA;
         let dataB;
         let params={}
@@ -172,7 +194,7 @@ class Controller {
         if(data.data.a){
             dataA=data.data.a;
             this.VARolesOne.push(...dataA.characters.edges);
-            //Se há mais paginas, settar params para a proxima query
+            //If hasNextPage = true, send again to get next page
             if(dataA.characters.pageInfo.hasNextPage){
                 params.id1=this.VAOneID;
                 params.page1=dataA.characters.pageInfo.currentPage+1;
@@ -182,25 +204,28 @@ class Controller {
         if(data.data.b){
             dataB=data.data.b;
             this.VARolesTwo.push(...dataB.characters.edges);
-            //Se há mais paginas, settar params para a proxima query
+            //If hasNextPage = true, send again to get next page
             if(dataB.characters.pageInfo.hasNextPage){
                 params.id2=this.VATwoID;
                 params.page2=dataB.characters.pageInfo.currentPage+1;
                 sendagain=true;
             }
         }        
-        //arr=array.map(a => ({...a}));      
+        //arr=array.map(a => ({...a}));
+        //If sendagain = true, will send again to get the next page      
         sendagain?this.search(false,params,this.handleDataFromBoth):this.compareWorks();    
-
     }
 
+    /**
+     * Search for overlapping works
+     */
     compareWorks(){          
         this.searchVAResult=[];
         this.overlappingRoles=[];       
         this.VARolesOne.forEach(role1=>{
             this.VARolesTwo.forEach(role2=>{
                 if(role1.media[0].title.native==role2.media[0].title.native){
-                    //criando novo obj com as informações que serão mostradas na tela e inserindo em um array                    
+                    //Creating new object with the necessary information and pushing into an array as object                    
                     let obj={
                         workname:role1.media[0],
                         name1:role1.node.name,
@@ -209,23 +234,24 @@ class Controller {
                     };
                     this.overlappingRoles.push(obj);
                 }          
-
             });
         });
 
         if(this.overlappingRoles.length<1){
-        //Se nenhum match for encontrado
+        //If no matches found
             this.showError("No matches found");
         }
         this.actualPage=1;
         let totalItems=this.overlappingRoles.length;
         //mostrar na tela
-        this.showStuffs(this.matchesEl,this.callbackWorks,totalItems);
+        this.showContent(this.matchesEl,this.callbackWorks,totalItems);
 
     }
 
-    //mostrar na tela o resultado das pesquisas e o resultado da comparação
-    showStuffs(element,callback,totalItems){
+    /**
+     * Showing the search result/ comparison result
+     */
+    showContent(element,callback,totalItems){
         console.log();    
         element.classList.remove("d-none");
         element.innerHTML="";   
@@ -234,15 +260,19 @@ class Controller {
         let start=perPage*(this.actualPage - 1);
         let end=start+perPage;
         
+        //Binding to keep context
         callback=callback.bind(this);
         callback(totalItems,start,end);
 
-        //Esconder Spinner
+        //Hide loading spinner
         this.spinner.classList.add("d-none");       
         
     }
-    
-    //Usada como callback quando chamar a showStuffs()
+
+    /**
+     *  Used as callback when calling showContent for showing 
+     *  the results of the comparison
+     */
     callbackWorks(totalItens,start,end){
         this.vaNamesEl.innerHTML="";
         this.vaNamesEl.innerHTML+=`
@@ -277,7 +307,10 @@ class Controller {
         } 
     }
 
-    //Usada como callback quando chamar a showStuffs()
+     /**
+     *  Used as callback when calling showContent for showing 
+     *  the results of the search
+     */
     callbackVASearch(totalItens,start,end){
         this.searchResultEl.innerHTML="";
 
@@ -293,33 +326,37 @@ class Controller {
         }
     }
 
-    //retorna as strings para mostrar na tela
+    /**
+     * Adjusting strings to display on screen
+     */
     getWorkname(worknameObj){
         let title=`${worknameObj.title.romaji!==null?worknameObj.title.romaji:""} 
                       ${worknameObj.title.native!==null?`(`+worknameObj.title.native+`)`:""} 
         `;
         return title;
     }
-
     getUrl(url){
         let title=`${url!==null?url:"https://anilist.co/"}
         `;
         return title;
     }
-
     getVAName(nameObj){
         return ` ${nameObj.last !== null ? nameObj.last : ""}
         ${nameObj.first !== null ? nameObj.first : ""}
         ${nameObj.native !== null ? `(` + nameObj.native + `)` : ""}`
     }
-
     getCharName(charnameObj){
         return ` ${nameObj.last !== null ? nameObj.last : ""}
         ${nameObj.first !== null ? nameObj.first : ""}
         ${nameObj.native !== null ? `(` + nameObj.native + `)` : ""}`
     }
+    /**
+    * End adjusting strings
+    */
 
-    //Adiciona LI ao UL da paginação
+    /**
+     * adding LI to navigation UL
+     */
     addLiToNav(i) {
         let li = document.createElement("li");
         let a = document.createElement("a");
@@ -348,7 +385,9 @@ class Controller {
         }        
     }
     
-    //adicionando eventos dos elementos de paginação
+    /**
+     * Adding events to the navigation LI elements
+     */
     addEventLiNav() {
         this.navUl.addEventListener("click", (e) => {
             e.preventDefault();
@@ -362,17 +401,18 @@ class Controller {
                         }                
                 if(this.searchVAResult.length<1){                
                 let totalItems=this.overlappingRoles.length;            
-                this.showStuffs(this.matchesEl,this.callbackWorks,totalItems);
+                this.showContent(this.matchesEl,this.callbackWorks,totalItems);
                 }else{
                 let totalItems=this.searchVAResult.length; 
-                this.showStuffs(this.matchesEl,this.callbackVASearch,totalItems);
+                this.showContent(this.matchesEl,this.callbackVASearch,totalItems);
                 }
             }
         });
     }
 
-
-    //Cria o menu de navegação de páginas
+    /**
+     * Creates the navigation menu
+     */
     showPages(totalItens, perPage=10) {
         this.navUl.innerHTML = "";
         this.navEl.classList.remove("d-none");
@@ -402,7 +442,10 @@ class Controller {
         }
         
     }
-    //Setando opções para a query
+
+    /**
+     * Setting options for query
+     */
     setOptions(selecting,params={}) {
 
         if (!params.page) {
@@ -435,7 +478,10 @@ class Controller {
             return response.ok ? json : Promise.reject(json);
         });
     }
-    //Erro de resposta do servidor
+
+    /**
+     * Server error/ Query error etc
+     */
     handleError(error) {
         alert('Error, check console');
         console.error(error);

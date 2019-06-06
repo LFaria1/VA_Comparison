@@ -1,7 +1,15 @@
+/**
+ * Receive the parameters and return query accordingly
+ * If search=TRUE will return the query to search in Anilist 
+ * database the name input
+ * 
+ * IF search=FALSE will returh the query to get the selected 
+ * voice actors works
+ */
 class Query{
     static getQuery(search=false,data={}){
         let query;
-        //buscando por nome
+        //Searching names
         if(search){
             query=`
             query($name: String,$page:Int){
@@ -43,7 +51,7 @@ class Query{
           }
             `;
         }else{
-            //buscando os trabalho das duas pessoas selecionadas
+            //Searching works
             let sendAgainA=false;
             let sendAgainB=false;
 
